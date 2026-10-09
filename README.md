@@ -2,7 +2,9 @@
 
 Watch one reel. Then stop. Bloom blocks Instagram Reels scrolling on Android: Stories and DMs stay, a reel opened from a chat plays but won't scroll on, and the Reels tab bounces you out.
 
-## [⬇ Download Bloom.apk](../../releases/latest/download/Bloom.apk)
+## [⬇ Download Bloom.apk](https://jakadwangdu.github.io/Bloom/Bloom.apk)
+
+Website: https://jakadwangdu.github.io/Bloom/
 
 All versions: [Releases](../../releases)
 
