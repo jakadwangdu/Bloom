@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries><package android:name="com.instagram.android"/></queries>
     <application android:label="Bloom" android:icon="@android:drawable/ic_menu_view"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         <activity android:name=".MainActivity" android:exported="true">

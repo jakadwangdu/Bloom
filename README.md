@@ -1,13 +1,17 @@
-# Bloom for Android
+# Bloom
 
-## Get the APK (no Android Studio needed)
-1. Create a free GitHub repo and push this folder to its `main` branch:
-   git init -b main && git add -A && git commit -m bloom
-   git remote add origin https://github.com/jakadwangdu/Bloom.git && git push -u origin main
-2. Open the repo's Actions tab, open "Build APK" and wait for the green tick (about 3 min).
-3. Download the `bloom-apk` artifact, unzip it, and you have app-debug.apk.
+Watch one reel. Then stop. Bloom blocks Instagram Reels scrolling on Android: Stories and DMs stay, a reel opened from a chat plays but won't scroll on, and the Reels tab bounces you out.
 
-(Or open the folder in Android Studio and press Run.)
+## [⬇ Download Bloom.apk](../../releases/latest/download/Bloom.apk)
 
-## Install on the phone
-Send the APK to your phone, tap it, allow "install unknown apps" if asked, then follow the in-app Setup guide.
+All versions: [Releases](../../releases)
+
+## Install
+1. Open the download link on your Android phone (or send the APK to it).
+2. Tap the file. If asked, allow "Install unknown apps" for your browser or Files app.
+3. Open Bloom and follow the in-app **Setup guide** (about 2 minutes).
+
+To stop Bloom, use the switch in the app or turn it off in Accessibility settings.
+
+## Build it yourself
+Pushing to `main` builds the APK on GitHub and publishes it as a new release automatically. Or open the folder in Android Studio and press Run.
