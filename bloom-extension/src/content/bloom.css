@@ -1,0 +1,9 @@
+#bloom-ov{position:fixed;inset:0;z-index:2147483647;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;text-align:center}
+#bloom-ov h1{font-weight:300;font-size:clamp(2.4rem,7vw,5rem);letter-spacing:-.05em;margin:0 0 .4em}
+#bloom-ov p{color:#8a8a8a;margin:0 0 2em;font-size:1.05rem}
+#bloom-ov a{display:inline-block;margin:0 6px;padding:13px 28px;border-radius:99px;border:1px solid #fff;color:#fff;text-decoration:none;font-size:15px}
+#bloom-ov a:first-of-type{background:#fff;color:#000}
+#bloom-toast{position:fixed;left:50%;bottom:36px;transform:translate(-50%,20px);opacity:0;z-index:2147483647;background:#000;color:#fff;border:1px solid #ffffff40;padding:12px 22px;border-radius:99px;font:14px -apple-system,"Segoe UI",Arial,sans-serif;pointer-events:none;transition:.3s}
+#bloom-toast.show{opacity:1;transform:translate(-50%,0)}
+html.bloom-hide a[href="/reels/"],html.bloom-hide a[href="/reels"]{display:none!important}
+html.bloom-hide:not(.bloom-dm) a[href*="/reel/"]{display:none!important}
