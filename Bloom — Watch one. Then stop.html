@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bloom — Watch one. Then stop.</title>
+<style>
+:root{--bg:#000;--fg:#fff;--mute:#8a8a8a;--line:#ffffff24;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#fff;--fg:#000;--mute:#6f6f6f;--line:#00000024}}
+:root[data-theme="light"]{--bg:#fff;--fg:#000;--mute:#6f6f6f;--line:#00000024}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,"Inter","Helvetica Neue",Arial,sans-serif;overflow-x:hidden}
+#bg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+nav{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:20px 28px;font-size:13px;mix-blend-mode:difference;color:#fff}
+nav b{letter-spacing:.4em;font-weight:500}
+nav span a,nav button{color:inherit;font:inherit;background:none;border:0;cursor:pointer;margin-left:22px;text-decoration:none}
+main{position:relative;z-index:1}
+.hero{min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 28px 7vh;max-width:1200px;margin:0 auto}
+h1{font-size:clamp(3.4rem,13vw,10rem);line-height:.9;letter-spacing:-.06em;font-weight:300}
+.meta{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;margin-top:2.4rem;color:var(--mute);font-size:14px}
+.btn{display:inline-block;padding:14px 30px;border-radius:99px;background:var(--fg);color:var(--bg);text-decoration:none;font-weight:500;border:1px solid var(--fg);font-size:15px;cursor:pointer;font-family:inherit}
+.btn.g{background:none;color:var(--fg);border-color:var(--line)}
+.btn[aria-disabled]{opacity:.45;cursor:default}
+.tag{border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.lock{display:inline-flex;align-items:center;gap:10px;cursor:pointer;background:none;border:0;color:var(--fg);font:inherit}
+.lock i{width:40px;height:22px;border:1px solid var(--fg);border-radius:99px;position:relative}
+.lock i:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--fg);transition:transform .35s}
+.lock.on i:after{transform:translateX(18px)}
+.mq{overflow:hidden;white-space:nowrap;border-block:1px solid var(--line);padding:18px 0;position:relative;z-index:1;background:color-mix(in srgb,var(--bg) 80%,transparent)}
+.mq div{display:inline-block;font-size:clamp(2rem,6vw,4.5rem);font-weight:300;letter-spacing:-.04em;animation:m 24s linear infinite;color:transparent;-webkit-text-stroke:1px var(--fg)}
+@keyframes m{to{transform:translateX(-50%)}}
+section{max-width:1200px;margin:0 auto;padding:16vh 28px;display:grid;grid-template-columns:minmax(120px,1fr) 3fr;gap:40px}
+.lab{color:var(--mute);font-size:13px;letter-spacing:.14em;text-transform:uppercase;position:sticky;top:90px;align-self:start}
+h2{font-size:clamp(1.9rem,5vw,3.4rem);letter-spacing:-.04em;line-height:1.05;font-weight:300;margin-bottom:1rem}
+.lead{color:var(--mute);max-width:52ch;margin-bottom:2rem}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1.4rem}
+.chip{font:inherit;font-size:14px;color:var(--fg);background:none;border:1px solid var(--line);padding:9px 16px;border-radius:99px;cursor:pointer;transition:.25s}
+.chip.on{background:var(--fg);color:var(--bg)}
+.panel{border:1px solid var(--line);border-radius:20px;padding:28px;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(14px)}
+.verdict{font-size:2.4rem;letter-spacing:-.04em;font-weight:300}
+.panel p{color:var(--mute);margin-top:.5rem;max-width:44ch}
+.steps div.s{border-top:1px solid var(--line);padding:22px 0;cursor:pointer}
+.steps div.s:last-child{border-bottom:1px solid var(--line)}
+.steps h3{font-weight:300;font-size:1.4rem;display:flex;justify-content:space-between;letter-spacing:-.02em}
+.steps h3 span{color:var(--mute);font-size:14px}
+.steps p{max-height:0;overflow:hidden;color:var(--mute);max-width:52ch}
+.rows div{display:flex;justify-content:space-between;gap:28px;padding:20px 0;border-top:1px solid var(--line)}
+.rows div:last-child{border-bottom:1px solid var(--line)}
+.rows span{color:var(--mute);text-align:right;max-width:38ch}
+.row2{display:flex;flex-wrap:wrap;gap:12px;margin-top:1.4rem}
+.note{color:var(--mute);font-size:13px;margin-top:1.4rem}
+footer{position:relative;z-index:1;text-align:center;color:var(--mute);font-size:13px;padding:0 24px 8vh}
+footer a{color:inherit}
+.js .r{opacity:0;transform:translateY(34px)}
+@media(max-width:760px){section{grid-template-columns:1fr;gap:16px}.lab{position:static}.rows div{flex-direction:column;gap:4px}.rows span{text-align:left}}
+@media(prefers-reduced-motion:reduce){.js .r{opacity:1;transform:none}.mq div{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<nav><b>BLOOM</b><span><a href="#how">How</a><a href="#setup">Setup</a><a href="#privacy">Privacy</a><button id="th" aria-label="Switch theme">◐</button></span></nav>
+<main>
+<div class="hero">
+  <h1 class="r">Watch one.<br>Then stop.</h1>
+  <div class="meta r">
+    <a class="btn" href="#download">Download APK</a>
+    <button class="lock on" id="lock"><i></i><span id="lt">Lock on</span></button>
+    <span>Android · Free · Open source</span>
+    <span class="tag">Browser extension · coming soon</span>
+  </div>
+</div>
+
+<div class="mq"><div id="mq"></div></div>
+
+<section id="how">
+  <div class="lab r">01 — How it works</div>
+  <div>
+    <h2 class="r">Quiet in the background. Strict at the door.</h2>
+    <p class="lead r">Bloom is an Android accessibility service. It watches only Instagram and steps in the moment a Reel viewer opens from the wrong place. Choose a way in:</p>
+    <div class="chips r" id="chips"></div>
+    <div class="panel r"><div class="verdict" id="vd"></div><p id="why"></p></div>
+  </div>
+</section>
+
+<section id="setup">
+  <div class="lab r">02 — Setup</div>
+  <div>
+    <h2 class="r">Two minutes. Once.</h2>
+    <p class="lead r">After this it keeps running by itself. Tap a step.</p>
+    <div class="steps r" id="steps"></div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="lab r">03 — Your data</div>
+  <div>
+    <h2 class="r">Does my data leak? No.</h2>
+    <p class="lead r">Bloom can't send anything off your phone, and you can check that yourself.</p>
+    <div class="rows r">
+      <div>Internet<span>No permission requested, so Android won't let Bloom connect.</span></div>
+      <div>What it reads<span>Instagram's screen structure, only to spot the Reel viewer. Read in memory, never saved.</span></div>
+      <div>What it keeps<span>An on/off switch and a daily count.</span></div>
+      <div>Your messages<span>Never recorded, copied or sent.</span></div>
+      <div>Verify<span>The code is public and GitHub builds the APK from it.</span></div>
+    </div>
+    <p class="note r">Accessibility is a powerful permission. Install Bloom only from this page or its GitHub repo.</p>
+  </div>
+</section>
+
+<section id="download">
+  <div class="lab r">04 — Get it</div>
+  <div>
+    <h2 class="r">Download Bloom.</h2>
+    <p class="lead r">Android 8 or newer. Straight from GitHub Releases.</p>
+    <div class="row2 r">
+      <a class="btn" href="https://github.com/jakadwangdu/Bloom/releases/latest/download/Bloom.apk">⬇ Bloom.apk</a>
+      <a class="btn g" href="https://github.com/jakadwangdu/Bloom">View source</a>
+      <a class="btn g" aria-disabled="true">Browser extension · coming soon</a>
+    </div>
+    <p class="note r">Android may warn about apps from outside the Play Store. Tap Install anyway.</p>
+  </div>
+</section>
+</main>
+<footer>Independent project, not affiliated with Instagram or Meta. · <a href="https://github.com/jakadwangdu/Bloom">GitHub</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script>
+(function(){
+var A=window.anime,de=document.documentElement,rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+var L=window.Lenis&&!rm?new Lenis():null;
+if(L){(function f(t){L.raf(t);requestAnimationFrame(f)})(0)}
+document.querySelectorAll('a[href^="#"]').forEach(function(a){a.onclick=function(e){
+  e.preventDefault();var t=document.querySelector(a.getAttribute('href'));
+  if(L)L.scrollTo(t);else t.scrollIntoView({behavior:rm?'auto':'smooth'})}});
+
+document.getElementById('mq').textContent=('Watch one. Then stop. — '.repeat(6));
+
+/* ---- the bloom ---- */
+var cv=document.getElementById('bg'),c=cv.getContext('2d'),W,H,D,fg='#fff',tx=0,ty=0,mx=0,my=0,open=0,prog=0,ripple=0,on=true;
+function col(){fg=getComputedStyle(de).getPropertyValue('--fg').trim()||'#fff'}
+function size(){D=Math.min(devicePixelRatio||1,2);W=cv.width=innerWidth*D;H=cv.height=innerHeight*D;col()}
+addEventListener('resize',size);size();
+addEventListener('pointermove',function(e){tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5});
+addEventListener('scroll',function(){var m=de.scrollHeight-innerHeight;prog=m>0?scrollY/m:0},{passive:true});
+function draw(ts){
+  var target=on?.4+.6*Math.min(1,prog*1.8):.04;
+  open+=(target-open)*(rm?1:.06);mx+=(tx-mx)*.05;my+=(ty-my)*.05;ripple=Math.max(0,ripple-.012);
+  c.clearRect(0,0,W,H);
+  var wide=innerWidth>800,cx=W*(wide?.7:.5)+mx*70*D,cy=H*.44+my*70*D,R=Math.min(W,H)*(wide?.44:.36),n=18,rot=rm?0:ts/1000*.07,len=R*(.14+.86*open);
+  c.strokeStyle=fg;c.fillStyle=fg;c.lineWidth=1.2*D;
+  for(var i=0;i<n;i++){c.save();c.translate(cx,cy);c.rotate(rot+i*Math.PI*2/n);c.globalAlpha=.1+.42*open;
+    c.beginPath();c.ellipse(0,-len/2,R*.1,len/2,0,0,7);c.stroke();c.restore()}
+  c.globalAlpha=1;c.beginPath();c.arc(cx,cy,(3+5*open)*D,0,7);c.fill();
+  if(ripple>0){c.globalAlpha=ripple*.5;c.beginPath();c.arc(cx,cy,R*(1.25-ripple*.9),0,7);c.stroke();c.globalAlpha=1}
+  requestAnimationFrame(draw)}
+requestAnimationFrame(draw);
+
+var lock=document.getElementById('lock');
+lock.onclick=function(){on=!on;lock.classList.toggle('on',on);document.getElementById('lt').textContent=on?'Lock on':'Lock off';ripple=1};
+document.getElementById('th').onclick=function(){
+  var dark=getComputedStyle(de).getPropertyValue('--bg').trim()==='#000';
+  de.setAttribute('data-theme',dark?'light':'dark');col()};
+
+/* ---- ways in ---- */
+var ways=[
+["Friend's reel in chat","Plays","Open it, watch it, like it, reply. One video, made for reacting."],
+["Swipe to the next","Snaps back","Bloom returns you to the reel you came for. A second try takes you back to the chat."],
+["Reels tab","Blocked","You're sent Home the moment the tab opens."],
+["Explore","Blocked","Reels opened from Explore close right away."],
+["A profile's Reels","Blocked","Tapping a reel on a profile doesn't open it."],
+["Link from outside","Blocked","Strict mode only allows reels opened from a chat."]];
+var ch=document.getElementById('chips'),vd=document.getElementById('vd'),why=document.getElementById('why');
+function pick(i){[].forEach.call(ch.children,function(b,j){b.classList.toggle('on',i===j)});
+  vd.textContent=ways[i][1];why.textContent=ways[i][2];
+  if(A&&!rm)A({targets:'.panel',scale:[.98,1],duration:420,easing:'easeOutQuart'})}
+ways.forEach(function(w,i){var b=document.createElement('button');b.className='chip';b.textContent=w[0];b.onclick=function(){pick(i)};ch.appendChild(b)});
+pick(0);
+
+/* ---- setup ---- */
+var st=[["Install","Download Bloom.apk below and open it. If Android asks, allow installs from your browser or Files app."],
+["Unlock the switch","Android 13+: Settings → Apps → Bloom, tap ⋮ at the top right, choose Allow restricted settings."],
+["Turn Bloom on","Settings → Accessibility → Bloom (Installed or Downloaded apps). Switch it on and tap Allow."],
+["Keep it awake","Set Bloom's battery to Unrestricted. On Xiaomi, Oppo, Vivo or Realme, also allow Autostart. Then test it in Instagram."]];
+var bx=document.getElementById('steps');
+st.forEach(function(s,i){var d=document.createElement('div');d.className='s';
+  d.innerHTML='<h3>'+s[0]+'<span>0'+(i+1)+'</span></h3><p>'+s[1]+'</p>';
+  d.onclick=function(){[].forEach.call(bx.children,function(o){
+    var open=o===d&&o.dataset.o!=='1';o.dataset.o=open?'1':'0';var p=o.querySelector('p');
+    if(A&&!rm)A({targets:p,maxHeight:open?120:0,paddingTop:open?12:0,duration:380,easing:'easeOutQuart'});
+    else{p.style.maxHeight=open?'120px':'0';p.style.paddingTop=open?'12px':'0'}})};
+  bx.appendChild(d)});
+bx.firstChild.click();
+
+/* ---- reveal ---- */
+if(A&&!rm){de.classList.add('js');
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);
+    A({targets:e.target,opacity:[0,1],translateY:[34,0],duration:1000,easing:'easeOutQuart'})}})},{threshold:.12});
+  document.querySelectorAll('.r').forEach(function(el){io.observe(el)})}
+})();
+</script>
+</body>
+</html>

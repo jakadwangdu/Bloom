@@ -59,6 +59,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -75,21 +77,21 @@ import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.sin
 
-private val Bg = Color(0xFF0B0A0D)
-private val Fg = Color(0xFFF2EEE8)
-private val Mute = Color(0xFF8D8878)
-private val Warm = Color(0xFFFF8A5C)
-private val Violet = Color(0xFFC86BFF)
-private val Amber = Color(0xFFFFB347)
-private val Green = Color(0xFF6BE38F)
+private val Bg = Color(0xFF000000)
+private val Fg = Color(0xFFFFFFFF)
+private val Mute = Color(0xFF8A8A8A)
+private val Warm = Color(0xFFFFFFFF)
+private val Violet = Color(0xFF9A9A9A)
+private val Amber = Color(0xFFBDBDBD)
+private val Green = Color(0xFFFFFFFF)
 
 class MainActivity : ComponentActivity() {
     private var resumes by mutableIntStateOf(0)
 
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
-        window.statusBarColor = 0xFF0B0A0D.toInt()
-        window.navigationBarColor = 0xFF0B0A0D.toInt()
+        window.statusBarColor = 0xFF000000.toInt()
+        window.navigationBarColor = 0xFF000000.toInt()
         setContent { BloomApp(resumes) }
     }
 
@@ -111,6 +113,7 @@ fun BloomApp(tick: Int) {
     val ctx = LocalContext.current
     val prefs = remember { ctx.getSharedPreferences("bloom", 0) }
     var on by remember { mutableStateOf(prefs.getBoolean("on", true)) }
+    var strict by remember { mutableStateOf(prefs.getBoolean("strict", true)) }
     var step by remember { mutableIntStateOf(-1) }
     val sv = remember(tick) { svcOn(ctx) }
     val count = remember(tick) {
@@ -134,12 +137,13 @@ fun BloomApp(tick: Int) {
                 },
                 label = "page"
             ) { s ->
-                if (s < 0) Home(on, sv, count,
+                if (s < 0) Home(on, sv, count, strict,
                     onToggle = {
                         if (!sv) step = 0
                         else { on = !on; prefs.edit().putBoolean("on", on).apply() }
                     },
-                    onSetup = { step = 0 })
+                    onSetup = { step = 0 },
+                    onStrict = { strict = !strict; prefs.edit().putBoolean("strict", strict).apply() })
                 else Wizard(s, sv,
                     onNext = { step = s + 1 },
                     onBack = { step = s - 1 },
@@ -150,21 +154,24 @@ fun BloomApp(tick: Int) {
 }
 
 @Composable
-fun Home(on: Boolean, sv: Boolean, count: Int, onToggle: () -> Unit, onSetup: () -> Unit) {
+fun Home(on: Boolean, sv: Boolean, count: Int, strict: Boolean, onToggle: () -> Unit, onSetup: () -> Unit, onStrict: () -> Unit) {
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val ax = remember { Animatable(0f) }
     val ay = remember { Animatable(0f) }
     val ring = remember { Animatable(0f) }
     val live = sv && on
-    val level by animateFloatAsState(
-        when { live -> 1f; !sv -> 0.45f; else -> 0f }, tween(800), label = "level")
-    val t by rememberInfiniteTransition(label = "breath")
-        .animateFloat(0f, 1f, infiniteRepeatable(tween(5000, easing = LinearEasing)), label = "t")
+    val open by animateFloatAsState(
+        when { live -> 1f; !sv -> 0.35f; else -> 0f }, tween(900), label = "open")
+    val spin by rememberInfiniteTransition(label = "spin")
+        .animateFloat(0f, 360f, infiniteRepeatable(tween(40000, easing = LinearEasing)), label = "deg")
     val shown by animateIntAsState(count, tween(700), label = "count")
 
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("BLOOM", color = Mute, fontSize = 12.sp, letterSpacing = 6.sp)
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("BLOOM", color = Mute, fontSize = 12.sp, letterSpacing = 6.sp)
+            Text("$shown stopped today", color = Mute, fontSize = 12.sp)
+        }
         Box(
             Modifier.weight(1f).fillMaxWidth()
                 .pointerInput(Unit) {
@@ -190,33 +197,42 @@ fun Home(on: Boolean, sv: Boolean, count: Int, onToggle: () -> Unit, onSetup: ()
         ) {
             Canvas(Modifier.fillMaxSize()) {
                 val c = center + Offset(ax.value, ay.value)
-                val base = size.minDimension * 0.30f
-                val br = 1f + 0.05f * sin(t * 2f * PI.toFloat()) * (0.4f + 0.6f * level)
-                val a = lerp(Color(0xFF3A3840), if (sv) Warm else Amber, level)
-                val b = lerp(Color(0xFF1E1D22), Violet, level)
-                val gr = base * 2.6f * br
-                drawCircle(
-                    Brush.radialGradient(listOf(a.copy(alpha = 0.06f + 0.43f * level), Color.Transparent), center = c, radius = gr),
-                    radius = gr, center = c)
+                val r = size.minDimension * 0.40f
+                val n = 12
+                val len = r * (0.16f + 0.84f * open)
+                for (i in 0 until n) {
+                    rotate(spin + i * 360f / n, pivot = c) {
+                        drawOval(Fg.copy(alpha = 0.15f + 0.55f * open),
+                            topLeft = Offset(c.x - r * 0.12f, c.y - len),
+                            size = Size(r * 0.24f, len), style = Stroke(1.5.dp.toPx()))
+                    }
+                }
+                drawCircle(Fg, radius = 3.dp.toPx() + 5.dp.toPx() * open, center = c)
                 if (ring.value in 0.001f..0.999f)
-                    drawCircle(a.copy(alpha = (1f - ring.value) * 0.6f),
-                        radius = base * (1f + ring.value * 1.6f), center = c, style = Stroke(2.dp.toPx()))
-                drawCircle(
-                    Brush.radialGradient(listOf(a, b), center = c - Offset(base * 0.3f, base * 0.35f), radius = base * 1.4f * br),
-                    radius = base * br, center = c)
+                    drawCircle(Fg.copy(alpha = (1f - ring.value) * 0.5f),
+                        radius = r * (0.3f + ring.value * 0.9f), center = c, style = Stroke(1.dp.toPx()))
             }
         }
         AnimatedContent(targetState = if (!sv) 0 else if (on) 1 else 2, label = "status") { k ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(when (k) { 0 -> "Tap to set up"; 1 -> "Lock is on"; else -> "Lock is off" },
-                    color = Fg, fontSize = 30.sp, fontWeight = FontWeight.Light)
-                Text(when (k) { 0 -> "Two minutes, once."; 1 -> "Reels can't pull you in."; else -> "Tap the orb to turn it back on." },
-                    color = Mute, fontSize = 15.sp, modifier = Modifier.padding(top = 8.dp), textAlign = TextAlign.Center)
-            }
+            Text(when (k) { 0 -> "Setup"; 1 -> "On"; else -> "Off" },
+                color = Fg, fontSize = 72.sp, fontWeight = FontWeight.Light, letterSpacing = (-2).sp)
         }
-        Text(if (shown == 0) "No Reels stopped yet today" else "$shown Reels stopped today",
-            color = Mute, fontSize = 13.sp, modifier = Modifier.padding(top = 24.dp, bottom = 24.dp))
-        Pill("Setup guide", false, onSetup)
+        Text(when { !sv -> "Tap the bloom to set up."; on -> "Reels can't pull you in."; else -> "Tap the bloom to turn on." },
+            color = Mute, fontSize = 15.sp, modifier = Modifier.padding(top = 4.dp, bottom = 28.dp))
+        LineRow("Strict mode", if (strict) "On" else "Off", onStrict)
+        LineRow("Setup guide", "\u2192", onSetup)
+    }
+}
+
+@Composable
+fun LineRow(label: String, value: String, onClick: () -> Unit) {
+    Column(Modifier.fillMaxWidth().clickable(
+        interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0x33FFFFFF)))
+        Row(Modifier.fillMaxWidth().padding(vertical = 18.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(label, color = Fg, fontSize = 16.sp)
+            Text(value, color = Mute, fontSize = 16.sp)
+        }
     }
 }
 

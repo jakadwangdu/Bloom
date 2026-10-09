@@ -25,6 +25,7 @@ class ReelsLockService : AccessibilityService() {
     private var strikes = 0
     private var strikeAt = 0L
     private var locked: String? = null
+    private var lastEvent = 0L
 
     private fun nodes(r: AccessibilityNodeInfo, id: String): List<AccessibilityNodeInfo> =
         r.findAccessibilityNodeInfosByViewId("$ig:id/$id") ?: emptyList()
@@ -80,21 +81,21 @@ class ReelsLockService : AccessibilityService() {
             if (!getSharedPreferences("bloom", 0).getBoolean("on", true)) { inViewer = false; return }
             val root = rootInActiveWindow ?: return
             val now = SystemClock.uptimeMillis()
+            if (now - lastEvent > 120000) state = "unknown"   // long gap: forget where we were
+            lastEvent = now
             val pager = find(root, "clips_viewer_view_pager")
 
             if (pager == null || !fullScreen(pager)) {   // chat, feed, previews: never interfere
                 inViewer = false; acts = 0; strikes = 0; locked = null
                 if (inChat(root)) state = "dm"
-                else if (has(root, "tab_bar")) {
-                    val tabs = listOf("feed_tab", "search_tab", "clips_tab", "profile_tab")
-                    if (tabs.any { id -> nodes(root, id).any { it.isSelected } }) state = "blocked"
-                }
+                else if (has(root, "tab_bar")) state = "blocked"   // feed, explore, search, profile
                 return
             }
 
             if (!inViewer) {
                 inViewer = true; since = now; strikes = 0; acts = 0; locked = null
-                allowed = state != "blocked"
+                val strict = getSharedPreferences("bloom", 0).getBoolean("strict", true)
+                allowed = if (strict) state == "dm" else state != "blocked"
             }
 
             val reelsTab = find(root, "clips_tab")?.isSelected == true
